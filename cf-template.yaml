@@ -1,5 +1,5 @@
 Description: >
-  This template creates a VPC, InternetGateway, a Public Subnet, an IAM Role, 
+  This template creates a VPC, InternetGateway, a Public Subnet, a Route Table, an IAM Role, 
   EC2 launch configuration and an Auto-scaling group.
 
 Parameters:
@@ -132,6 +132,4 @@ Resources:
         - Key: Name 
           Value: !Sub ${AppName}
           PropagateAtLaunch: true
-
-
 
