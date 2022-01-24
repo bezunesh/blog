@@ -46,6 +46,25 @@ Resources:
       Tags: 
         - Key: Name 
           Value: !Sub ${AppName} Public Subnet
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+        VpcId: !Ref VPC
+        Tags: 
+            - Key: Name 
+              Value: !Sub ${AppName} Public Routes
+  DefaultPublicRoute: 
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties: 
+        RouteTableId: !Ref PublicRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId: !Ref InternetGateway
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+        RouteTableId: !Ref PublicRouteTable
+        SubnetId: !Ref PublicSubnet
   S3ReadOnlyRole:
     Type: AWS::IAM::Role
     Properties:
@@ -54,8 +73,7 @@ Resources:
       AssumeRolePolicyDocument: 
         Version: "2012-10-17"
         Statement: 
-          - 
-            Effect: "Allow"
+          - Effect: "Allow"
             Principal: 
               Service: 
                 - "ec2.amazonaws.com"
@@ -68,12 +86,11 @@ Resources:
       Path: "/"
       Roles: 
         - !Ref S3ReadOnlyRole
+  WebServerSecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow incoming http request to our host and outgoing traffic to any destination
-      VpcId:
-        Fn::ImportValue:
-          !Sub "${AppName}-VPCID"
+      VpcId: !Ref VPC
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 80
@@ -87,7 +104,6 @@ Resources:
   WebAppLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      KeyName: "bezu-aws"
       ImageId: ami-083654bd07b5da81d
       IamInstanceProfile: !Ref S3ReadOnlyProfile
       SecurityGroups:
@@ -106,13 +122,16 @@ Resources:
   WebAppAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier:
-      - Fn::ImportValue: 
-          !Sub "${AppName}-PUB-SN"
+      VPCZoneIdentifier: 
+        - !Ref PublicSubnet
       LaunchConfigurationName:
         Ref: WebAppLaunchConfig
       MinSize: '1'
       MaxSize: '2'
+      Tags:
+        - Key: Name 
+          Value: !Sub ${AppName} Server
+          PropagateAtLaunch: true
 
 
 
