@@ -117,7 +117,7 @@ Resources:
           #!/bin/bash
           apt update -y
           apt install -y awscli nginx
-          aws s3 cp s3://bezu-bucket/web/  /var/www/html/index.html
+          aws s3 cp s3://bezu-bucket/html/ /var/www/html/ --recursive 
           systemctl restart nginx
   WebAppAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -130,7 +130,7 @@ Resources:
       MaxSize: '2'
       Tags:
         - Key: Name 
-          Value: !Sub ${AppName} Server
+          Value: !Sub ${AppName}
           PropagateAtLaunch: true
 
 
